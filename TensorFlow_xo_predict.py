@@ -10,6 +10,7 @@ import numpy
 import time
 import TensorFlow_XO_dataReadIn
 import os
+from tensorflow.python.framework import graph_util
 
 """
 -load data from  images
@@ -25,7 +26,7 @@ categorylabels  - one-hot array
   
 pathtoFile='data/' #path to training_data_sm folder
 
-pathtoFile = os.getcwd() + "/"
+pathtoFile = os.getcwd() + "/data/"
 
 summary_path = os.getcwd() + "/summary/"
 
@@ -38,6 +39,40 @@ print(pathtoFile)
 def make_hyper_string(Nodes_fullyconnected, Kernelsize, maxPooling, ActivationFunc):
         hyperstring='FCneurons=' + str(Nodes_fullyconnected) + '_Kernelsize=' + str(Kernelsize) + '_maxPool=' +str(maxPooling) + '_ActFunc=' + str(ActivationFunc)
         return hyperstring
+        
+# ==============================================================================
+# Save .pb and log its .pbtxt with
+# (1) Remove all the explicit device specifications
+# (2) Convert variables to constants
+# (3) Remove training nodes
+# ==============================================================================
+def Save_pb(sess, net, pbName, clear_devices = True):
+    output_node_names = net.name
+    output_node_names =output_node_names.split(":")
+    output_node_names = output_node_names[0]
+    
+    input_graph_def = net.graph.as_graph_def()
+    
+    # Remove all the explicit device specifications for this node. This helps to
+    # make the graph more portable.
+    if clear_devices:
+        for node in input_graph_def.node:
+            node.device = ""
+    
+    output_graph_def = graph_util.convert_variables_to_constants( 
+        sess,
+        input_graph_def,
+        output_node_names.split(",")
+    )
+    
+    output_graph_def = graph_util.remove_training_nodes(output_graph_def)
+    tf.train.write_graph(output_graph_def, './',pbName+"_MobileDeploy.pbtxt")
+    print("pbtxt file generated ^____^")
+    
+    with tf.gfile.GFile(pbName+"_frozen.pb", "wb") as f: 
+        f.write(output_graph_def.SerializeToString())
+    print("pb file generated ^____^")
+    print("%d ops in the final graph." % len(output_graph_def.node))
 
 activationList = {0: tf.nn.tanh, 1: tf.sigmoid, 2: tf.nn.relu, 3: tf.nn.elu} #dictionary for choosing the activation function
 
@@ -49,6 +84,7 @@ Filters_layer2 = 16
 Filters_layer3 = 16
 Nodes_fullyconnected = 20
 BATCH_size = 100
+TRAIN_STEPS = 200
 Kernelsize=5 #size of the kernel ex. 5x5
 maxPoolingSize=2 #
 ActivationFunc=2
@@ -118,7 +154,7 @@ reached99 = 0
 epoch=-1
 t0=time.time()
 
-for i in range(500): #Train for 2000 steps
+for i in range(TRAIN_STEPS): #Train for 2000 steps
     if i%(images_train.shape[0]/BATCH_size) == 0: #shuffle data after all was used 
         [images_train, image_labels_train]= TensorFlow_XO_dataReadIn.shuffle_data(images_train, image_labels_train)
         ii=0
@@ -155,4 +191,6 @@ print('Time passed To reach 99%:', reached99, ' seconds')
 print('Time passed To end:', numpy.round(time.time()-t0), ' seconds')
 print("ValidationSet accuracy %g"%accuracy.eval(feed_dict={
           Input: images_valid, Output_label: image_labels_valid}))
+
+Save_pb(sess, Outputlayer, "OX_Predict")       
 sess.close() #close the session
