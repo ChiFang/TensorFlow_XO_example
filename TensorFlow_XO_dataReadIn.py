@@ -27,12 +27,15 @@ def data_readIn_and_subdivision_XoXo(path):
     images = np.empty([2000,116,116],dtype=np.float32)
     labels = np.zeros([2000,2],dtype=np.float32)
     for i in range(1000):
-        os.chdir(path + 'training_data_sm/circles_sm/')
-        images[i,:,:] =  np.float32(misc.imread('ci'+str(i+1)+'.bmp')/255)
+        index = str(i+1)+'.bmp'
+        path_circles = path + 'training_data_sm/circles_sm/' + 'ci' + index
+        path_crosses = path + 'training_data_sm/crosses_sm/' + 'cr' + index
+        # os.chdir(path + 'training_data_sm/circles_sm/')
+        images[i,:,:] =  np.float32(misc.imread(path_circles)/255)
         labels[i,0] = 1
         
-        os.chdir(path + 'training_data_sm/crosses_sm/')
-        images[i+1000,:,:] = np.float32( misc.imread('cr'+str(i+1)+'.bmp')/255)
+        # os.chdir(path + 'training_data_sm/crosses_sm/')
+        images[i+1000,:,:] = np.float32(misc.imread(path_crosses)/255)
         labels[i+1000,1] = 1
     [images, labels] = shuffle_data(images, labels)
     images=np.expand_dims(images,axis=3) #add depth dimension of 1 since grayscale

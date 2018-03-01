@@ -26,7 +26,7 @@ categorylabels  - one-hot array
   
 pathtoFile='data/' #path to training_data_sm folder
 
-pathtoFile = os.getcwd() + "/data/"
+pathtoFile = os.getcwd() + "/"
 
 summary_path = os.getcwd() + "/summary/"
 
@@ -35,6 +35,8 @@ print(pathtoFile)
 [images_train, image_labels_train, images_test, image_labels_test, images_valid,
      image_labels_valid] = TensorFlow_XO_dataReadIn.data_readIn_and_subdivision_XoXo(pathtoFile) #reads the image data from files and randomly divides into train,valid and test
 
+     
+print("Curr: ", os.getcwd())
 #function to make a string with hyperparameters to add to summaryname, easy differentiation of runs in Tensorboard
 def make_hyper_string(Nodes_fullyconnected, Kernelsize, maxPooling, ActivationFunc):
         hyperstring='FCneurons=' + str(Nodes_fullyconnected) + '_Kernelsize=' + str(Kernelsize) + '_maxPool=' +str(maxPooling) + '_ActFunc=' + str(ActivationFunc)
@@ -118,8 +120,12 @@ with tf.name_scope('Conv3'):
     conv3=tf.layers.conv2d(maxp2,Filters_layer3,Kernelsize,activation=activationList[ActivationFunc],name='Conv3')
     maxp3=tf.layers.max_pooling2d(conv3, maxPoolingSize, 2, padding='valid', name='maxPool3')             
 
-#Fully connected layers     
-h_pool3_flat = tf.contrib.layers.flatten(maxp3)#reshape to input a vector to fully connected layer
+#Fully connected layers
+print("maxp3.shape: ", maxp3.shape)
+size1D = maxp3.shape[1] * maxp3.shape[2] * maxp3.shape[3]
+print("size1D: ", size1D)
+h_pool3_flat = tf.reshape(maxp3, [-1, size1D]) #reshape to input a vector to fully connected layer
+# h_pool3_flat = tf.contrib.layers.flatten(maxp3)#reshape to input a vector to fully connected layer
 FClayer1 = tf.layers.dense(inputs=h_pool3_flat, units=Nodes_fullyconnected, activation=activationList[ActivationFunc], name='FC1')
 Outputlayer = tf.layers.dense(inputs=FClayer1, units=NUMBER_categories, activation=None,name='OutputLayer') #output layer
     

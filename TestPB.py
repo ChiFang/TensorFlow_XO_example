@@ -1,17 +1,17 @@
 import cv2
 
+ModelFile = "OX_Predict_frozen.pb"
 
-print("1...")
-net = cv2.dnn.readNetFromTensorflow("OX_Predict_frozen.pb")
-print("2...")
+print("Start...")
+net = cv2.dnn.readNetFromTensorflow(ModelFile)
+print("Load \'" + ModelFile + "\' Pass~~")
 frame = cv2.imread("ci1.bmp")
 inScaleFactor = 1 / 255
-print("3...")
-blob = cv.dnn.blobFromImage(frame, inScaleFactor, (116, 116))
-print("4...")
+print("Read image Pass~~")
+blob = cv2.dnn.blobFromImage(frame, inScaleFactor, (116, 116))
+print("blobFromImage Pass~~")
 net.setInput(blob)
-print("5...")
+print("setInput Pass~~")
 detections = net.forward()
-
 print(detections)
 
